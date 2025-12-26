@@ -15,8 +15,16 @@ import App from './App.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
+// Global configuration for API base path
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 // Axios interceptors
 axios.interceptors.request.use(config => {
+  // Handle custom base URL for relative paths starting with /api
+  if (API_BASE_URL && config.url && config.url.startsWith('/api')) {
+    config.url = API_BASE_URL + config.url;
+  }
+
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

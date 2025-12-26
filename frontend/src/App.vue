@@ -16,7 +16,7 @@ const username = ref(localStorage.getItem('username') || '管理员');
 
 const systemConfigs = ref<Record<string, string>>({
   'sys.name': '数据集成工具',
-  'sys.logo': '/vite.svg',
+  'sys.logo': `${import.meta.env.BASE_URL || ''}vite.svg`.replace(/\/+/g, '/'),
   'sys.footer': '© 2025 Data Sync Tool. All rights reserved.'
 });
 
@@ -86,7 +86,7 @@ onMounted(() => {
   <el-container v-else class="layout-container">
     <el-aside width="240px" class="aside">
       <div class="logo-container">
-        <img :src="systemConfigs['sys.logo'] || '/vite.svg'" alt="logo" class="logo" />
+        <img :src="systemConfigs['sys.logo']" alt="logo" class="logo" />
         <span class="title">{{ systemConfigs['sys.name'] }}</span>
       </div>
       <el-menu
