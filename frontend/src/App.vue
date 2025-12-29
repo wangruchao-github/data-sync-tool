@@ -4,6 +4,7 @@ import { Coin, Operation, Document, Monitor, Setting, SwitchButton } from '@elem
 import axios from 'axios';
 import DataSourceList from './components/DataSourceList.vue';
 import TaskOrchestration from './components/TaskOrchestration.vue';
+import ApiManagement from './components/ApiManagement.vue';
 import ExecutionLogs from './components/ExecutionLogs.vue';
 import MonitorDashboard from './components/MonitorDashboard.vue';
 import Login from './components/Login.vue';
@@ -108,9 +109,13 @@ onMounted(() => {
         </el-menu-item>
         <el-menu-item index="3">
           <el-icon><Document /></el-icon>
-          <span>运行日志</span>
+          <span>API服务</span>
         </el-menu-item>
         <el-menu-item index="4">
+          <el-icon><Document /></el-icon>
+          <span>运行日志</span>
+        </el-menu-item>
+        <el-menu-item index="5">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
         </el-menu-item>
@@ -127,8 +132,9 @@ onMounted(() => {
           <span v-if="activeIndex === '0'">监控看板</span>
           <span v-else-if="activeIndex === '1'">数据源管理</span>
           <span v-else-if="activeIndex === '2'">任务编排</span>
-          <span v-else-if="activeIndex === '3'">运行日志</span>
-          <span v-else-if="activeIndex === '4'">系统设置</span>
+          <span v-else-if="activeIndex === '3'">API服务</span>
+          <span v-else-if="activeIndex === '4'">运行日志</span>
+          <span v-else-if="activeIndex === '5'">系统设置</span>
         </div>
         <div class="header-right">
           <el-dropdown @command="handleLogout">
@@ -156,9 +162,12 @@ onMounted(() => {
           <TaskOrchestration :initial-task-id="targetTaskId" @clear-initial-task="targetTaskId = null" />
         </div>
         <div v-else-if="activeIndex === '3'">
-          <ExecutionLogs @jump-to-task="handleJumpToTask" />
+          <ApiManagement />
         </div>
         <div v-else-if="activeIndex === '4'">
+          <ExecutionLogs @jump-to-task="handleJumpToTask" />
+        </div>
+        <div v-else-if="activeIndex === '5'">
           <SystemSettings />
         </div>
       </el-main>

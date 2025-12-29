@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: baseUrl ? {
         [`${baseUrl}/api`]: {
-          target: 'http://112.124.3.174:8088/ilido-data-sync-tool',
+          // target: 'http://112.124.3.174:8088/ilido-data-sync-tool',
+          target: 'http://localhost:8080/ilido-data-sync-tool',
           changeOrigin: true,
           rewrite: (path) => path.replace(new RegExp(`^${baseUrl}`), '')
         }

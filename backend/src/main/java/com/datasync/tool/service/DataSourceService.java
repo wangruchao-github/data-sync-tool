@@ -32,13 +32,25 @@ public class DataSourceService {
         dataSourceRepository.deleteById(id);
     }
 
+    public String getJdbcUrl(DataSource ds) {
+        if ("MYSQL".equalsIgnoreCase(ds.getType())) {
+            return String.format("jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true",
+                    ds.getHost(), ds.getPort(), ds.getDatabaseName());
+        }
+        // Add other database types here
+        return null;
+    }
+
+    public Connection getConnection(DataSource ds) throws SQLException {
+        return DriverManager.getConnection(getJdbcUrl(ds), ds.getUsername(), ds.getPassword());
+    }
+
     public List<Map<String, Object>> previewSql(Long dataSourceId, String sql) {
         DataSource ds = findById(dataSourceId);
-        String url = String.format("jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC",
-                ds.getHost(), ds.getPort(), ds.getDatabaseName());
+        String url = getJdbcUrl(ds);
         
         List<Map<String, Object>> results = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(url, ds.getUsername(), ds.getPassword());
+        try (Connection conn = getConnection(ds);
              Statement stmt = conn.createStatement()) {
             
             // Limit to 10 rows for preview
