@@ -8,6 +8,8 @@ import ExecutionLogs from './components/ExecutionLogs.vue';
 import MonitorDashboard from './components/MonitorDashboard.vue';
 import Login from './components/Login.vue';
 import SystemSettings from './components/SystemSettings.vue';
+import DatabaseMaintenance from './components/DatabaseMaintenance.vue';
+import ExportRecords from './components/ExportRecords.vue';
 
 const activeIndex = ref('0');
 const targetTaskId = ref<number | null>(null);
@@ -114,6 +116,14 @@ onMounted(() => {
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
         </el-menu-item>
+        <el-menu-item index="5">
+          <el-icon><Operation /></el-icon>
+          <span>数据库运维</span>
+        </el-menu-item>
+        <el-menu-item index="6">
+          <el-icon><Document /></el-icon>
+          <span>导出记录</span>
+        </el-menu-item>
       </el-menu>
       
       <div class="aside-footer">
@@ -129,6 +139,8 @@ onMounted(() => {
           <span v-else-if="activeIndex === '2'">任务编排</span>
           <span v-else-if="activeIndex === '3'">运行日志</span>
           <span v-else-if="activeIndex === '4'">系统设置</span>
+          <span v-else-if="activeIndex === '5'">数据库运维</span>
+          <span v-else-if="activeIndex === '6'">导出记录</span>
         </div>
         <div class="header-right">
           <el-dropdown @command="handleLogout">
@@ -160,6 +172,12 @@ onMounted(() => {
         </div>
         <div v-else-if="activeIndex === '4'">
           <SystemSettings />
+        </div>
+        <div v-else-if="activeIndex === '5'">
+          <DatabaseMaintenance />
+        </div>
+        <div v-else-if="activeIndex === '6'">
+          <ExportRecords />
         </div>
       </el-main>
     </el-container>

@@ -33,8 +33,9 @@ public class DataInitializer implements CommandLineRunner {
 
         // Initialize default system configs
         initializeConfig("sys.name", "Data Sync Tool", "系统名称", "显示在页面顶部的系统标题");
-        initializeConfig("sys.logo", "", "系统LOGO", "系统LOGO图片的Base64或URL");
+        initializeConfig("sys.logo", "", "系统LOGO", "系统LOGO图片的Base64 or URL");
         initializeConfig("sys.footer", "© 2025 Data Sync Tool. All rights reserved.", "页脚文字", "显示在页面底部的版权信息");
+        initializeConfig("ops.export.path", "exports", "导出文件存储路径", "数据库运维导出文件的存放目录（相对或绝对路径）");
     }
 
     private void initializeConfig(String key, String value, String name, String desc) {
