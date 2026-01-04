@@ -37,14 +37,12 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(response => {
   return response;
 }, error => {
-  if (error.response && error.response.status === 401) {
+  if (error.response && (error.response.status === 401 || error.response.status === 403)) {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     // If not on login page, we can't easily redirect without router, 
     // but App.vue will handle the switch based on token absence
     window.location.reload();
-  } else if (error.response && error.response.status === 403) {
-    ElMessage.error('权限不足或登录已过期');
   }
   return Promise.reject(error);
 });

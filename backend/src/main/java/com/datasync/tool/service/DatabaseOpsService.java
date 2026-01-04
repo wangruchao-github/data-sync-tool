@@ -3,10 +3,13 @@ package com.datasync.tool.service;
 import com.datasync.tool.entity.DataSource;
 import com.datasync.tool.entity.DatabaseExportRecord;
 import com.datasync.tool.repository.DatabaseExportRepository;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -194,15 +197,23 @@ public class DatabaseOpsService {
             File file = new File(exportPath, fileName);
 
             try (Connection conn = DriverManager.getConnection(url, ds.getUsername(), ds.getPassword());
-                 Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT * FROM " + record.getTableName())) {
+                 Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+                
+                // MySQL specific streaming configuration
+                if ("MYSQL".equalsIgnoreCase(ds.getType())) {
+                    stmt.setFetchSize(Integer.MIN_VALUE);
+                } else {
+                    stmt.setFetchSize(1000);
+                }
 
-                if ("SQL".equalsIgnoreCase(record.getFormat())) {
-                    exportToSql(rs, file, record.getTableName());
-                } else if ("JSON".equalsIgnoreCase(record.getFormat())) {
-                    exportToJson(rs, file);
-                } else if ("EXCEL".equalsIgnoreCase(record.getFormat())) {
-                    exportToExcel(rs, file, record.getTableName());
+                try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + record.getTableName())) {
+                    if ("SQL".equalsIgnoreCase(record.getFormat())) {
+                        exportToSql(rs, file, record.getTableName());
+                    } else if ("JSON".equalsIgnoreCase(record.getFormat())) {
+                        exportToJson(rs, file);
+                    } else if ("EXCEL".equalsIgnoreCase(record.getFormat())) {
+                        exportToExcel(rs, file, record.getTableName());
+                    }
                 }
             }
 
@@ -253,21 +264,27 @@ public class DatabaseOpsService {
     }
 
     private void exportToJson(ResultSet rs, File file) throws Exception {
-        List<Map<String, Object>> data = new ArrayList<>();
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        while (rs.next()) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            for (int i = 1; i <= columnCount; i++) {
-                row.put(metaData.getColumnName(i), rs.getObject(i));
+        try (JsonGenerator jg = objectMapper.getFactory().createGenerator(new FileWriter(file))) {
+            jg.writeStartArray();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            while (rs.next()) {
+                jg.writeStartObject();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    Object value = rs.getObject(i);
+                    jg.writeFieldName(columnName);
+                    jg.writeObject(value);
+                }
+                jg.writeEndObject();
             }
-            data.add(row);
+            jg.writeEndArray();
         }
-        objectMapper.writeValue(file, data);
     }
 
     private void exportToExcel(ResultSet rs, File file, String tableName) throws Exception {
-        try (Workbook workbook = new XSSFWorkbook();
+        // Use SXSSFWorkbook for streaming large Excel files
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              FileOutputStream fos = new FileOutputStream(file)) {
             Sheet sheet = workbook.createSheet(tableName);
             
@@ -292,8 +309,14 @@ public class DatabaseOpsService {
                         cell.setCellValue(val.toString());
                     }
                 }
+                
+                // Periodically clear temporary data to keep memory usage low
+                if (rowNum % 1000 == 0) {
+                    ((SXSSFSheet) sheet).flushRows(100);
+                }
             }
             workbook.write(fos);
+            workbook.dispose(); // Clean up temporary files
         }
     }
 
